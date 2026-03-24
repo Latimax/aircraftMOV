@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aircraft Movement Register</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: "#101510",
+                        mist: "#111111",
+                        copper: "#d9b500",
+                        signal: "#1f8f4a",
+                        success: "#1f8f4a",
+                        danger: "#ff7d7d"
+                    },
+                    fontFamily: {
+                        sans: ["AirOps Sans", "ui-sans-serif", "system-ui", "sans-serif"]
+                    },
+                    boxShadow: {
+                        soft: "0 24px 70px rgba(4, 17, 29, 0.28)",
+                        glow: "0 18px 60px rgba(99, 179, 201, 0.18)"
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="min-h-screen font-sans text-mist">
+    <div class="pointer-events-none absolute inset-0 noise-overlay opacity-70"></div>
+    <div class="pointer-events-none absolute -left-20 top-12 h-64 w-64 rounded-full bg-signal/10 blur-3xl float-orb"></div>
+    <div class="pointer-events-none absolute right-0 top-32 h-72 w-72 rounded-full bg-copper/10 blur-3xl float-orb delay-orb"></div>
+    <main id="app" class="relative mx-auto max-w-[1800px] px-4 py-6 sm:px-6 lg:px-8 lg:py-10"></main>
+    <div id="toastContainer" class="fixed right-4 top-4 z-40 flex w-full max-w-sm flex-col gap-3"></div>
+    <div id="messageModal" class="modal-shell" data-open="false" aria-hidden="true"></div>
+    <script src="./app.js"></script>
+</body>
+</html>
