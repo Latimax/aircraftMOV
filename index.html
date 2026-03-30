@@ -1,43 +1,241 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aircraft Movement Register</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        ink: "#101510",
-                        mist: "#111111",
-                        copper: "#d9b500",
-                        signal: "#1f8f4a",
-                        success: "#1f8f4a",
-                        danger: "#ff7d7d"
-                    },
-                    fontFamily: {
-                        sans: ["AirOps Sans", "ui-sans-serif", "system-ui", "sans-serif"]
-                    },
-                    boxShadow: {
-                        soft: "0 24px 70px rgba(4, 17, 29, 0.28)",
-                        glow: "0 18px 60px rgba(99, 179, 201, 0.18)"
-                    }
-                }
-            }
-        };
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+    <link rel="icon" href="favicon.png">
     <link rel="stylesheet" href="./styles.css">
+    <script src="./vendor/exceljs.min.js"></script>
+    <script defer src="./js/constants.js"></script>
+    <script defer src="./js/utils.js"></script>
+    <script defer src="./js/store.js"></script>
+    <script defer src="./js/workbook.js"></script>
+    <script defer src="./app.js"></script>
 </head>
-<body class="min-h-screen font-sans text-mist">
-    <div class="pointer-events-none absolute inset-0 noise-overlay opacity-70"></div>
-    <div class="pointer-events-none absolute -left-20 top-12 h-64 w-64 rounded-full bg-signal/10 blur-3xl float-orb"></div>
-    <div class="pointer-events-none absolute right-0 top-32 h-72 w-72 rounded-full bg-copper/10 blur-3xl float-orb delay-orb"></div>
-    <main id="app" class="relative mx-auto max-w-[1800px] px-4 py-6 sm:px-6 lg:px-8 lg:py-10"></main>
-    <div id="toastContainer" class="fixed right-4 top-4 z-40 flex w-full max-w-sm flex-col gap-3"></div>
-    <div id="messageModal" class="modal-shell" data-open="false" aria-hidden="true"></div>
-    <script src="./app.js"></script>
+<body>
+    <main class="page-shell">
+        <section class="panel hero-panel">
+            <div class="hero-head">
+                <p class="eyebrow">Aircraft Movement</p>
+                <h1>Aircraft Movement Register</h1>
+            </div>
+            <div class="summary-strip">
+                <article class="summary-card summary-card--wide summary-card--source">
+                    <span class="summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v8A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"></path>
+                            <path d="M3 10h18"></path>
+                        </svg>
+                    </span>
+                    <div class="summary-card__body">
+                        <p class="summary-label">Workbook Source</p>
+                        <p id="workbookSourceStatus" class="summary-value">Checking project workbook...</p>
+                    </div>
+                </article>
+                <article class="summary-card summary-card--save">
+                    <span class="summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"></path>
+                            <path d="M9 12.5 11 14.5 15.5 10"></path>
+                        </svg>
+                    </span>
+                    <div class="summary-card__body">
+                        <p class="summary-label">Save Status</p>
+                        <p id="saveStatus" class="summary-value" data-tone="idle">Idle</p>
+                    </div>
+                </article>
+                <article class="summary-card summary-card--import">
+                    <span class="summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 3v11"></path>
+                            <path d="m7.5 9.5 4.5 4.5 4.5-4.5"></path>
+                            <path d="M4 18.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5"></path>
+                        </svg>
+                    </span>
+                    <div class="summary-card__body">
+                        <p class="summary-label">Imported Records</p>
+                        <p id="importedRecordCount" class="summary-value">0</p>
+                    </div>
+                </article>
+                <article class="summary-card summary-card--total">
+                    <span class="summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <ellipse cx="12" cy="5.5" rx="6.5" ry="2.5"></ellipse>
+                            <path d="M5.5 5.5v6c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-6"></path>
+                            <path d="M5.5 11.5v6c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-6"></path>
+                        </svg>
+                    </span>
+                    <div class="summary-card__body">
+                        <p class="summary-label">Total Register</p>
+                        <p id="totalRegisterCount" class="summary-value">0</p>
+                    </div>
+                </article>
+                <article class="summary-card summary-card--day">
+                    <span class="summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect>
+                            <path d="M7.5 3v4"></path>
+                            <path d="M16.5 3v4"></path>
+                            <path d="M3.5 9.5h17"></path>
+                            <path d="M8 13h3"></path>
+                        </svg>
+                    </span>
+                    <div class="summary-card__body">
+                        <p class="summary-label">Current Day Records</p>
+                        <p id="savedRecordCount" class="summary-value">0</p>
+                    </div>
+                </article>
+                <article class="summary-card summary-card--shift">
+                    <span class="summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2.75a9.25 9.25 0 1 0 9.25 9.25"></path>
+                            <path d="M12 7.5v5l3.25 1.75"></path>
+                        </svg>
+                    </span>
+                    <div class="summary-card__body">
+                        <p class="summary-label">Current Shift Records</p>
+                        <p id="currentShiftRecordCount" class="summary-value">0</p>
+                    </div>
+                </article>
+                <article class="summary-card summary-card--rows">
+                    <span class="summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="5" width="16" height="4" rx="1.5"></rect>
+                            <rect x="4" y="10.5" width="16" height="4" rx="1.5"></rect>
+                            <rect x="4" y="16" width="16" height="4" rx="1.5"></rect>
+                        </svg>
+                    </span>
+                    <div class="summary-card__body">
+                        <p class="summary-label">Entry Rows</p>
+                        <p id="entryRowCount" class="summary-value">25</p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="panel toolbar-panel">
+            <div class="toolbar-row">
+                <label class="field-block compact-block">
+                    <span>Working Date</span>
+                    <input id="defaultDateInput" type="date">
+                </label>
+                <label class="field-block compact-block">
+                    <span>Saved Table View</span>
+                    <select id="savedViewMode">
+                        <option value="all">All records</option>
+                        <option value="date">Selected date only</option>
+                    </select>
+                </label>
+                <label class="field-block compact-block">
+                    <span>Table Date</span>
+                    <input id="savedViewDateInput" type="date">
+                </label>
+            </div>
+            <div class="button-row">
+                <button id="addRowsBtn" type="button" class="btn btn-primary">Add 25 Rows</button>
+                <button id="startShiftBtn" type="button" class="btn btn-secondary">Start New Shift</button>
+                <button id="toggleShiftViewBtn" type="button" class="btn btn-secondary">Show Current Shift Only</button>
+                <button id="reloadWorkbookBtn" type="button" class="btn btn-secondary">Reload Project Workbook</button>
+                <button id="downloadWorkbookBtn" type="button" class="btn btn-secondary">Download Excel</button>
+                <button id="connectSyncBtn" type="button" class="btn btn-secondary">Connect Auto Sync</button>
+            </div>
+            <div class="toolbar-note-row">
+                <p class="helper-text">
+                    Each new row starts with the working date above. Use left and right arrows to move across fields, and moving past the last field on the last row adds one more row.
+                </p>
+                <p id="shiftStatus" class="sync-state" data-tone="muted">No shift split has been started for this day.</p>
+                <p id="syncStatus" class="sync-state" data-tone="muted">Excel auto sync is not connected.</p>
+            </div>
+        </section>
+
+        <section class="panel stats-panel">
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow">Statistics</p>
+                    <h2>Saved movement totals for the working day</h2>
+                    <p id="statsDateLabel" class="helper-text">Current day statistics</p>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <article class="stat-panel">
+                    <h3>Aircraft Totals</h3>
+                    <div id="aircraftStats" class="chip-grid"></div>
+                </article>
+                <article class="stat-panel">
+                    <h3>Watch Totals</h3>
+                    <div id="watchStats" class="chip-grid"></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow">Entry Sheet</p>
+                    <h2>25 row auto-save entry form</h2>
+                </div>
+                <p class="helper-text">Rows save automatically when the required fields are complete. Reset clears a new row or restores the saved values of a loaded record. Dates start on today unless you change them.</p>
+            </div>
+            <div class="table-shell">
+                <table class="sheet-table entry-table">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Date</th>
+                            <th>Watch</th>
+                            <th>Aircraft</th>
+                            <th>Reg. No</th>
+                            <th>Arrival</th>
+                            <th>Departure</th>
+                            <th>Souls Landing</th>
+                            <th>Souls Take Off</th>
+                            <th>Crew</th>
+                            <th>Operating Company</th>
+                            <th>Destination</th>
+                            <th>Status</th>
+                            <th>Reset</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entrySheetBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow">Saved Register</p>
+                    <h2>All saved rows</h2>
+                </div>
+                <p id="savedTableSummary" class="helper-text">0 saved records.</p>
+            </div>
+            <div class="table-shell">
+                <table class="sheet-table saved-table">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Date</th>
+                            <th>Watch</th>
+                            <th>Aircraft</th>
+                            <th>Reg. No</th>
+                            <th>Arrival</th>
+                            <th>Departure</th>
+                            <th>Souls Landing</th>
+                            <th>Souls Take Off</th>
+                            <th>Crew</th>
+                            <th>Operating Company</th>
+                            <th>Destination</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="savedTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <datalist id="aircraftSuggestionList"></datalist>
+    <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
 </body>
 </html>
