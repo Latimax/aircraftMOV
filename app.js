@@ -981,7 +981,10 @@
         await store.openDb();
         await requestPersistentStorage();
 
-        state.defaultDate = (await store.getMeta("defaultDate")) || utils.todayYmd();
+        const today = utils.todayYmd();
+        const persistedDefaultDate = (await store.getMeta("defaultDate")) || today;
+
+        state.defaultDate = today;
         state.savedViewMode = (await store.getMeta("savedViewMode")) || "all";
         state.savedViewDate = (await store.getMeta("savedViewDate")) || state.defaultDate;
         state.importedRecordCount = Number((await store.getMeta("importedRecordCount")) || 0);
@@ -995,6 +998,10 @@
             state.importedRecordCount = state.records.length;
         }
         state.entryRows = hydrateEntryRows(await store.getMeta("entryRows"));
+        if (state.savedViewMode === "date" && state.savedViewDate === persistedDefaultDate) {
+            state.savedViewDate = state.defaultDate;
+        }
+        applyDefaultDateToBlankRows(persistedDefaultDate, state.defaultDate);
         trimTrailingBlankRows(DEFAULT_ENTRY_ROWS);
         ensureMinimumEntryRows();
 
